@@ -40,7 +40,7 @@ That's it. The green background is gone.
 I needed a 3D animated mascot for [my product's website](https://usetct.io). No budget for a designer, no patience for Blender. So I generated the character with AI (Higgsfield.ai), animated it with Kling 2.5, and rendered it on a solid green background.
 
 <p align="center">
-  <img src="assets/original-greenscreen.png" alt="Original green screen mascot" width="400" />
+  <img src="assets/result-on-website.png" alt="Mascot on the live website" width="600" />
 </p>
 
 Then I needed to remove the green. The obvious route: FFmpeg chroma key filter, export WebM with alpha, done. Tried it. The results were rough. Green bleeding around edges, and WebM with alpha doesn't work on Safari. File sizes balloon when you add a transparency channel.
@@ -48,7 +48,7 @@ Then I needed to remove the green. The obvious route: FFmpeg chroma key filter, 
 So I wrote a WebGL shader that does it in real-time, in the browser, on the GPU. Turned out to be cleaner, faster, and more flexible than any pre-processing approach. Packaged it into this component.
 
 <p align="center">
-  <img src="assets/result-on-website.png" alt="Final result on the live website" width="600" />
+  <img src="assets/demo.gif" alt="Real-time green screen removal in action" width="600" />
 </p>
 
 ## How the Shader Works
