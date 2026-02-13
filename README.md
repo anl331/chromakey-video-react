@@ -6,7 +6,11 @@
 
 > **Real-time chroma key video in React. No FFmpeg, no pre-processing, runs on the GPU.**
 
-Drop a green-screen video into your React app and get instant transparency — rendered frame-by-frame on the GPU with a single WebGL shader. No server, no WASM, no waiting.
+Drop a green-screen video into your React app and get instant transparency, rendered frame-by-frame on the GPU with a single WebGL shader. No server, no WASM, no waiting.
+
+<p align="center">
+  <img src="assets/demo.gif" alt="Real-time green screen removal demo" width="600" />
+</p>
 
 ## Install
 
@@ -31,43 +35,71 @@ function App() {
 
 That's it. The green background is gone.
 
-## Props
+## The Story Behind This
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `src` | `string` | *required* | Video source URL |
-| `color` | `string` | `"#00ff00"` | Hex color to key out (e.g. `"#00ff00"` for green, `"#0000ff"` for blue) |
-| `similarity` | `number` | `0.35` | How aggressively to match the key color (0–1). Higher = more removal. |
-| `blend` | `number` | `0.15` | Soft edge blending range (0–1). Higher = softer edges. |
-| `despill` | `boolean` | `true` | Remove color spill/tint from edges of the subject |
-| `loop` | `boolean` | `true` | Loop the video |
-| `autoPlay` | `boolean` | `true` | Auto-play the video (always muted for browser autoplay policy) |
-| `className` | `string` | — | CSS class applied to the `<canvas>` element |
+I needed a 3D animated mascot for [my product's website](https://tradingconfluencetool.com). No budget for a designer, no patience for Blender. So I generated the character with AI (Higgsfield.ai), animated it with Kling 2.5, and rendered it on a solid green background.
 
-## How It Works
+<p align="center">
+  <img src="assets/original-greenscreen.png" alt="Original green screen mascot" width="400" />
+</p>
 
-The component renders a hidden `<video>` element and draws each frame to a WebGL `<canvas>` through a custom fragment shader. The shader uses a **dominance-based algorithm** rather than simple RGB distance:
+Then I needed to remove the green. The obvious route: FFmpeg chroma key filter, export WebM with alpha, done. Tried it. The results were rough. Green bleeding around edges, and WebM with alpha doesn't work on Safari. File sizes balloon when you add a transparency channel.
 
-1. **Identify the dominant channel** of the key color (green for `#00ff00`)
-2. **Measure excess** — how much the dominant channel exceeds the average of the other two
-3. **Calculate dominance ratio** — `excess / (dominant + ε)`
-4. **Threshold with soft blend** — pixels above the similarity threshold become transparent, with smooth blending at the edges
-5. **Despill** — reduce color tint on semi-transparent edge pixels so subjects don't glow green
+So I wrote a WebGL shader that does it in real-time, in the browser, on the GPU. Turned out to be cleaner, faster, and more flexible than any pre-processing approach. Packaged it into this component.
 
-This approach is far more accurate than Euclidean RGB distance because it measures *how green* a pixel is relative to itself, not how close it is to pure green. Dark greens, light greens, and shadowed greens all get caught.
+<p align="center">
+  <img src="assets/result-on-website.png" alt="Final result on the live website" width="600" />
+</p>
+
+## How the Shader Works
+
+The shader uses a **dominance-based algorithm** rather than simple RGB distance. This is what makes it accurate across dark greens, light greens, and shadowed greens.
+
+```glsl
+// Green dominance check
+float avg = (r + b) * 0.5;
+float greenExcess = g - avg;
+float dominance = greenExcess / (g + 0.004);
+float brightness = r + g + b;
+
+float alpha = 1.0;
+
+if (greenExcess > 0.12 && brightness > 0.24) {
+  if (dominance > 0.35) {
+    alpha = 0.0;  // fully transparent
+  } else if (dominance > 0.2) {
+    alpha = 1.0 - smoothstep(0.2, 0.35, dominance);  // soft edge
+  }
+}
+```
+
+Instead of measuring "how close to pure green" (Euclidean RGB distance), it measures **how green a pixel is relative to itself**. A dark green pixel and a bright green pixel both get caught because the ratio stays consistent. Edge pixels get a smooth falloff via `smoothstep`, so no harsh jagged borders. A despill pass cleans up leftover green tint on the subject's edges.
 
 ## Why Not FFmpeg / WebM with Alpha?
 
 | | This package | FFmpeg pre-processing | WebM alpha |
 |---|---|---|---|
 | **Setup** | `npm install`, done | Need FFmpeg pipeline, server or build step | Need to re-encode video |
-| **File size** | Regular MP4 | Same or larger | 2–5× larger (alpha channel) |
+| **File size** | Regular MP4 | Same or larger | 2-5x larger (alpha channel) |
 | **Browser support** | All (WebGL) | N/A | Chrome/Firefox only (no Safari) |
 | **Runtime cost** | GPU shader, ~0ms CPU | None (pre-processed) | Decode cost for larger file |
 | **Flexibility** | Adjust threshold live | Re-encode to change | Re-encode to change |
-| **Any key color** | ✅ Change via prop | Need different preset per color | Baked in |
+| **Any key color** | Change via prop | Different preset per color | Baked in |
 
-The sweet spot: you keep your regular MP4 files (small, compatible everywhere), and the GPU does the keying at 60fps. No build step, no server, no Safari compatibility headaches.
+The sweet spot: keep your regular MP4 files (small, compatible everywhere), and the GPU does the keying at 60fps.
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `src` | `string` | *required* | Video source URL |
+| `color` | `string` | `"#00ff00"` | Hex color to key out (e.g. `"#00ff00"` for green, `"#0000ff"` for blue) |
+| `similarity` | `number` | `0.35` | How aggressively to match the key color (0-1). Higher = more removal. |
+| `blend` | `number` | `0.15` | Soft edge blending range (0-1). Higher = softer edges. |
+| `despill` | `boolean` | `true` | Remove color spill/tint from edges of the subject |
+| `loop` | `boolean` | `true` | Loop the video |
+| `autoPlay` | `boolean` | `true` | Auto-play the video (always muted for browser autoplay policy) |
+| `className` | `string` | — | CSS class applied to the `<canvas>` element |
 
 ## Advanced Usage
 
@@ -84,13 +116,19 @@ The sweet spot: you keep your regular MP4 files (small, compatible everywhere), 
   src="/tricky-footage.mp4"
   similarity={0.4}  // more aggressive removal
   blend={0.2}       // softer edges
-  despill={true}    // clean up green fringing
+  despill={true}    // clean up color fringing
 />
 ```
 
+## Tips
+
+- **Background color matters.** Use a color far from anything in your subject. Green (`#00ff00`) is standard. If your subject has green, use magenta (`#FF00FF`).
+- **Keep everything opaque.** Semi-transparent elements in the video (holographic effects, glass, etc.) will cause issues with chroma removal.
+- **CORS headers.** If your video is cross-origin, make sure it's served with proper CORS headers or WebGL can't read the frames.
+
 ## Browser Support
 
-Works in all browsers that support WebGL (97%+ global coverage). Video must be served with proper CORS headers if cross-origin.
+Works in all browsers that support WebGL (97%+ global coverage).
 
 ## Read More
 
@@ -98,7 +136,7 @@ Works in all browsers that support WebGL (97%+ global coverage). Video must be s
 
 ## Credits
 
-Built by [@_itsanl](https://x.com/_itsanl) (Alfredo Natal) while building [@useTCT](https://x.com/useTCT) — [Trading Confluence Tool](https://tradingconfluencetool.com).
+Built by [@_itsanl](https://x.com/_itsanl) (Alfredo Natal) while building [TCT](https://tradingconfluencetool.com), a Chrome extension that helps traders grade their setups before entering.
 
 ## License
 
