@@ -37,7 +37,7 @@ That's it. The green background is gone.
 
 ## The Story Behind This
 
-I needed a 3D animated mascot for [my product's website](https://tradingconfluencetool.com). No budget for a designer, no patience for Blender. So I generated the character with AI (Higgsfield.ai), animated it with Kling 2.5, and rendered it on a solid green background.
+I needed a 3D animated mascot for [my product's website](https://usetct.io). No budget for a designer, no patience for Blender. So I generated the character with AI (Higgsfield.ai), animated it with Kling 2.5, and rendered it on a solid green background.
 
 <p align="center">
   <img src="assets/original-greenscreen.png" alt="Original green screen mascot" width="400" />
@@ -136,7 +136,7 @@ Works in all browsers that support WebGL (97%+ global coverage).
 
 ## Credits
 
-Built by [@_itsanl](https://x.com/_itsanl) (Alfredo Natal) while building [TCT](https://tradingconfluencetool.com), a Chrome extension that helps traders grade their setups before entering.
+Built by [@_itsanl](https://x.com/_itsanl) (Alfredo Natal) while building [TCT](https://usetct.io), a Chrome extension that helps traders grade their setups before entering.
 
 ## License
 
