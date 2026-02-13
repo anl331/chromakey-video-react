@@ -51,30 +51,6 @@ So I wrote a WebGL shader that does it in real-time, in the browser, on the GPU.
   <img src="assets/demo.gif" alt="Real-time green screen removal in action" width="600" />
 </p>
 
-## How the Shader Works
-
-The shader uses a **dominance-based algorithm** rather than simple RGB distance. This is what makes it accurate across dark greens, light greens, and shadowed greens.
-
-```glsl
-// Green dominance check
-float avg = (r + b) * 0.5;
-float greenExcess = g - avg;
-float dominance = greenExcess / (g + 0.004);
-float brightness = r + g + b;
-
-float alpha = 1.0;
-
-if (greenExcess > 0.12 && brightness > 0.24) {
-  if (dominance > 0.35) {
-    alpha = 0.0;  // fully transparent
-  } else if (dominance > 0.2) {
-    alpha = 1.0 - smoothstep(0.2, 0.35, dominance);  // soft edge
-  }
-}
-```
-
-Instead of measuring "how close to pure green" (Euclidean RGB distance), it measures **how green a pixel is relative to itself**. A dark green pixel and a bright green pixel both get caught because the ratio stays consistent. Edge pixels get a smooth falloff via `smoothstep`, so no harsh jagged borders. A despill pass cleans up leftover green tint on the subject's edges.
-
 ## Why Not FFmpeg / WebM with Alpha?
 
 | | This package | FFmpeg pre-processing | WebM alpha |
