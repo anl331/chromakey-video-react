@@ -37,18 +37,22 @@ That's it. The green background is gone.
 
 ## The Story Behind This
 
-I needed a 3D animated mascot for [my product's website](https://usetct.io). No budget for a designer, no patience for Blender. So I generated the character with AI (Higgsfield.ai), animated it with Kling 2.5, and rendered it on a solid green background.
+I needed a 3D animated mascot for [my product's website](https://usetct.io). No budget for a designer, no patience for Blender. So I generated the character image with AI ([Higgsfield.ai](https://higgsfield.ai)), then animated it into a 5-second looping video using Kling 2.5. The trick was rendering it on a solid green background so I could remove it later.
+
+This is what the raw video looks like:
 
 <p align="center">
   <img src="assets/mascot-greenscreen.gif" alt="Animated mascot with green screen background" width="400" />
 </p>
 
-Then I needed to remove the green. The obvious route: FFmpeg chroma key filter, export WebM with alpha, done. Tried it. The results were rough. Green bleeding around edges, and WebM with alpha doesn't work on Safari. File sizes balloon when you add a transparency channel.
+Now I needed to remove that green background. The obvious route: run FFmpeg with a chroma key filter, export a WebM with alpha transparency. Tried it. The results were rough. Green bleeding around the edges of the character, and WebM with alpha doesn't even work on Safari. File sizes balloon when you add a transparency channel.
 
-So I wrote a WebGL shader that does it in real-time, in the browser, on the GPU. Turned out to be cleaner, faster, and more flexible than any pre-processing approach. Packaged it into this component.
+So I wrote a WebGL fragment shader that does it in real-time, in the browser, on the GPU. It plays the original MP4 through a hidden video element, checks every pixel for "is this green?", and sets matching pixels to transparent. The result renders on a canvas with a transparent background. Cleaner output, works everywhere, and you can tweak the thresholds without re-encoding anything.
+
+Here's what the final result looks like, green background completely gone, running live in the browser:
 
 <p align="center">
-  <img src="assets/demo.gif" alt="Real-time green screen removal in action" width="600" />
+  <img src="assets/demo.gif" alt="Real-time green screen removal result" width="600" />
 </p>
 
 ## Why Not FFmpeg / WebM with Alpha?
