@@ -1,7 +1,7 @@
 {
   "name": "chromakey-video-react",
-  "version": "0.1.0",
-  "description": "Real-time chroma key video in React. No FFmpeg, no pre-processing, runs on the GPU.",
+  "version": "0.1.1",
+  "description": "Real-time chroma key (green screen) video in React. GPU-powered WebGL shader. No FFmpeg, no pre-processing, works everywhere.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -40,9 +40,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/anl331/react-chromakey-video"
+    "url": "https://github.com/anl331/chromakey-video-react.git"
   },
-  "homepage": "https://github.com/anl331/react-chromakey-video#readme",
+  "homepage": "https://chromakey-playground.vercel.app",
   "peerDependencies": {
     "react": ">=17.0.0",
     "react-dom": ">=17.0.0"
