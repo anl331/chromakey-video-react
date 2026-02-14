@@ -8,7 +8,7 @@
 
 Drop a green-screen video into your React app and get instant transparency, rendered frame-by-frame on the GPU with a single WebGL shader. No server, no WASM, no waiting.
 
-**[Try the playground →](https://anl331.github.io/chromakey-playground/)**
+**[Try the playground →](https://chromakey-playground.vercel.app)**
 
 <p align="center">
   <img src="assets/demo.gif" alt="Real-time green screen removal demo" width="600" />
